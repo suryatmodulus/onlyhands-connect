@@ -1,7 +1,23 @@
 import { Twitter } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
 
-const Login = () => {
+interface LoginProps {
+  onLogin: () => void;
+}
+
+const Login = ({ onLogin }: LoginProps) => {
+  const { toast } = useToast();
+
+  const handleTwitterLogin = () => {
+    // Mock successful login
+    toast({
+      title: "Success!",
+      description: "Logged in with Twitter successfully",
+    });
+    onLogin();
+  };
+
   return (
     <div className="min-h-screen grid md:grid-cols-2">
       <div className="hidden md:block">
@@ -19,10 +35,7 @@ const Login = () => {
           </div>
           <Button
             className="w-full flex items-center justify-center gap-2"
-            onClick={() => {
-              // TODO: Implement Twitter login
-              console.log("Login with Twitter");
-            }}
+            onClick={handleTwitterLogin}
           >
             <Twitter size={20} />
             Continue with Twitter

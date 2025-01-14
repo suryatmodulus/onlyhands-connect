@@ -7,14 +7,13 @@ import Layout from "./components/Layout";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
-import React from 'react';
+import React, { useState } from 'react';
 
 const queryClient = new QueryClient();
 
-// TODO: Implement proper auth check
-const isAuthenticated = false;
-
 const App = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
   return (
     <React.StrictMode>
       <BrowserRouter>
@@ -23,7 +22,13 @@ const App = () => {
             <Routes>
               <Route
                 path="/login"
-                element={isAuthenticated ? <Navigate to="/" /> : <Login />}
+                element={
+                  isAuthenticated ? (
+                    <Navigate to="/" />
+                  ) : (
+                    <Login onLogin={() => setIsAuthenticated(true)} />
+                  )
+                }
               />
               <Route
                 element={isAuthenticated ? <Layout /> : <Navigate to="/login" />}

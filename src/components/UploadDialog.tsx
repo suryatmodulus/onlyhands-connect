@@ -38,6 +38,13 @@ const UploadDialog = ({ open, onOpenChange }: UploadDialogProps) => {
     try {
       setUploading(true);
 
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
+
       // Upload image to Supabase Storage
       const fileExt = image.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
@@ -58,6 +65,7 @@ const UploadDialog = ({ open, onOpenChange }: UploadDialogProps) => {
         .insert({
           image_url: publicUrl,
           caption: caption,
+          user_id: user.id
         });
 
       if (insertError) throw insertError;

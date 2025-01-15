@@ -1,45 +1,94 @@
 import { Heart, Share2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Post {
   id: string;
   user: {
-    name: string;
-    avatar: string;
+    username: string;
+    avatar_url: string | null;
   };
-  image: string;
-  caption: string;
-  timestamp: string;
+  image_url: string;
+  caption: string | null;
+  created_at: string;
   likes: number;
 }
 
-const MOCK_POSTS: Post[] = [
-  {
-    id: "1",
-    user: {
-      name: "johndoe",
-      avatar: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b",
-    },
-    image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d",
-    caption: "Working on something exciting! 🚀",
-    timestamp: "2h ago",
-    likes: 42,
-  },
-  {
-    id: "2",
-    user: {
-      name: "janedoe",
-      avatar: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158",
-    },
-    image: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7",
-    caption: "Perfect day for coding ☕️",
-    timestamp: "4h ago",
-    likes: 28,
-  },
-];
-
 const Home = () => {
-  const [posts, setPosts] = useState<Post[]>(MOCK_POSTS);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchPosts();
+    subscribeToNewPosts();
+  }, []);
+
+  const fetchPosts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('posts')
+        .select(`
+          id,
+          image_url,
+          caption,
+          created_at,
+          profiles:user_id (
+            username,
+            avatar_url
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const formattedPosts = data.map((post: any) => ({
+        id: post.id,
+        user: {
+          username: post.profiles?.username || 'Anonymous',
+          avatar_url: post.profiles?.avatar_url,
+        },
+        image_url: post.image_url,
+        caption: post.caption,
+        created_at: new Date(post.created_at).toLocaleString(),
+        likes: 0, // Placeholder for likes functionality
+      }));
+
+      setPosts(formattedPosts);
+    } catch (error: any) {
+      console.error('Error fetching posts:', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const subscribeToNewPosts = () => {
+    const channel = supabase
+      .channel('public:posts')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'posts',
+        },
+        (payload) => {
+          fetchPosts(); // Refresh posts when a new one is added
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-screen-sm mx-auto px-4 py-6 space-y-6">
@@ -49,15 +98,21 @@ const Home = () => {
           className="bg-white rounded-lg shadow animate-fade-in"
         >
           <div className="p-4 flex items-center gap-3">
-            <img
-              src={post.user.avatar}
-              alt={post.user.name}
-              className="w-8 h-8 rounded-full object-cover"
-            />
-            <span className="font-medium">{post.user.name}</span>
+            {post.user.avatar_url ? (
+              <img
+                src={post.user.avatar_url}
+                alt={post.user.username}
+                className="w-8 h-8 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                {post.user.username[0].toUpperCase()}
+              </div>
+            )}
+            <span className="font-medium">{post.user.username}</span>
           </div>
           <img
-            src={post.image}
+            src={post.image_url}
             alt=""
             className="w-full aspect-square object-cover"
           />
@@ -71,11 +126,13 @@ const Home = () => {
               </button>
             </div>
             <div className="text-sm font-medium">{post.likes} likes</div>
-            <div>
-              <span className="font-medium">{post.user.name}</span>{" "}
-              <span className="text-gray-900">{post.caption}</span>
-            </div>
-            <div className="text-gray-500 text-sm">{post.timestamp}</div>
+            {post.caption && (
+              <div>
+                <span className="font-medium">{post.user.username}</span>{" "}
+                <span className="text-gray-900">{post.caption}</span>
+              </div>
+            )}
+            <div className="text-gray-500 text-sm">{post.created_at}</div>
           </div>
         </article>
       ))}

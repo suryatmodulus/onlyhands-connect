@@ -1,22 +1,26 @@
-import { Twitter } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { Auth } from "@supabase/auth-ui-react";
+import { ThemeSupa } from "@supabase/auth-ui-shared";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface LoginProps {
   onLogin: () => void;
 }
 
 const Login = ({ onLogin }: LoginProps) => {
-  const { toast } = useToast();
+  const navigate = useNavigate();
 
-  const handleTwitterLogin = () => {
-    // Mock successful login
-    toast({
-      title: "Success!",
-      description: "Logged in with Twitter successfully",
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN") {
+        onLogin();
+        navigate("/");
+      }
     });
-    onLogin();
-  };
+
+    return () => subscription.unsubscribe();
+  }, [navigate, onLogin]);
 
   return (
     <div className="min-h-screen grid md:grid-cols-2">
@@ -33,13 +37,12 @@ const Login = ({ onLogin }: LoginProps) => {
             <h1 className="text-4xl font-bold text-primary mb-2">Onlyhands</h1>
             <p className="text-gray-600">Share your moments with the world</p>
           </div>
-          <Button
-            className="w-full flex items-center justify-center gap-2"
-            onClick={handleTwitterLogin}
-          >
-            <Twitter size={20} />
-            Continue with Twitter
-          </Button>
+          <Auth
+            supabaseClient={supabase}
+            appearance={{ theme: ThemeSupa }}
+            providers={["twitter"]}
+            theme="light"
+          />
         </div>
       </div>
     </div>

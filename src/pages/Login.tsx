@@ -12,10 +12,23 @@ const Login = ({ onLogin }: LoginProps) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN") {
+        // After sign in, check if username exists
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', session?.user?.id)
+          .single();
+
         onLogin();
-        navigate("/");
+        
+        // If no username is set, redirect to profile page
+        if (!profile?.username) {
+          navigate("/profile");
+        } else {
+          navigate("/");
+        }
       }
     });
 

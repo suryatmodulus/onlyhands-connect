@@ -55,6 +55,7 @@ const Login = ({ onLogin }: LoginProps) => {
             appearance={{ theme: ThemeSupa }}
             providers={["twitter"]}
             theme="light"
+            onlyThirdPartyProviders
           />
         </div>
       </div>

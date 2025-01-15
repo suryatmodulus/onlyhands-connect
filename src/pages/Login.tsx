@@ -39,7 +39,7 @@ const Login = ({ onLogin }: LoginProps) => {
     <div className="min-h-screen grid md:grid-cols-2">
       <div className="hidden md:block">
         <img
-          src="https://images.unsplash.com/photo-1649972904349-6e44c42644a7"
+          src="https://images.unsplash.com/photo-1690228827328-d29b2428797e"
           alt="Login"
           className="h-full w-full object-cover"
         />
@@ -47,8 +47,8 @@ const Login = ({ onLogin }: LoginProps) => {
       <div className="flex items-center justify-center p-8">
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-primary mb-2">Onlyhands</h1>
-            <p className="text-gray-600">Share your moments with the world</p>
+            <h1 className="text-4xl font-bold text-primary mb-2">OnlyHands</h1>
+            <p className="text-gray-600">Share your hand with the world</p>
           </div>
           <Auth
             supabaseClient={supabase}

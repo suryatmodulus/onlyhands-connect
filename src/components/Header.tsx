@@ -1,38 +1,80 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
-import { Home, UserRound, Plus } from "lucide-react";
+import { Home, UserRound, Plus, LogOut } from "lucide-react";
 import { useDialog } from "@/hooks/use-dialog";
 import UploadDialog from "./UploadDialog";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Header = () => {
   const uploadDialog = useDialog();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      navigate("/login");
+      toast({
+        title: "Logged out successfully",
+        description: "See you soon!",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to log out. Please try again.",
+      });
+    }
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-50">
       <div className="max-w-screen-xl mx-auto px-4 h-full flex items-center justify-between">
-        <Link to="/" className="text-2xl font-bold text-primary">
+        <Link to="/" className="text-2xl font-bold text-primary hover:opacity-90 transition-opacity">
           Onlyhands
         </Link>
         
-        <div className="hidden md:flex items-center gap-2">
+        <div className="hidden md:flex items-center gap-3">
           <Button
             variant="ghost"
             size="icon"
             onClick={uploadDialog.onOpen}
-            className="rounded-full"
+            className="rounded-full hover:bg-gray-100"
+            title="Upload"
           >
             <Plus className="h-5 w-5" />
           </Button>
           <Link to="/">
-            <Button variant="ghost" size="icon" className="rounded-full">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="rounded-full hover:bg-gray-100"
+              title="Home"
+            >
               <Home className="h-5 w-5" />
             </Button>
           </Link>
           <Link to="/profile">
-            <Button variant="ghost" size="icon" className="rounded-full">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="rounded-full hover:bg-gray-100"
+              title="Profile"
+            >
               <UserRound className="h-5 w-5" />
             </Button>
           </Link>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleLogout}
+            className="rounded-full hover:bg-gray-100"
+            title="Logout"
+          >
+            <LogOut className="h-5 w-5" />
+          </Button>
         </div>
       </div>
       <UploadDialog 

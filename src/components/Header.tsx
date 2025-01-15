@@ -5,11 +5,35 @@ import { useDialog } from "@/hooks/use-dialog";
 import UploadDialog from "./UploadDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useEffect } from "react";
 
 const Header = () => {
   const uploadDialog = useDialog();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Check auth state on component mount
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/login");
+      }
+    };
+
+    checkAuth();
+
+    // Subscribe to auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' && !session) {
+        navigate("/login");
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
 
   const handleLogout = async () => {
     try {
@@ -26,6 +50,10 @@ const Header = () => {
         title: "Error",
         description: "Failed to log out. Please try again.",
       });
+      // If we get a refresh token error, force redirect to login
+      if (error.message?.includes('refresh_token')) {
+        navigate("/login");
+      }
     }
   };
 

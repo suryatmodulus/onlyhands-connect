@@ -35,7 +35,10 @@ const Header = () => {
           </Link>
         </div>
       </div>
-      <UploadDialog {...uploadDialog} />
+      <UploadDialog 
+        open={uploadDialog.isOpen} 
+        onOpenChange={(open) => open ? uploadDialog.onOpen() : uploadDialog.onClose()} 
+      />
     </header>
   );
 };
